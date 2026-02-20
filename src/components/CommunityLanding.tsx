@@ -14,7 +14,7 @@ interface CommunityStats {
   totalCacheRead: number;
   totalCacheWrite: number;
   totalCost: number;
-  days: { [date: string]: { tokens: number } };
+  days: { [date: string]: { tokens: number; messages: number; tokensIn: number; tokensOut: number; cost: number; sessions: number; cacheRead: number; cacheWrite: number } };
   models: { [model: string]: { messages: number; tokens: number; cost: number } };
   tools: { [tool: string]: number };
 }
@@ -56,19 +56,19 @@ export default function CommunityLanding() {
     generatedAt: new Date().toISOString(),
     days: Object.entries(stats?.days || {}).reduce((acc, [date, data]) => {
       acc[date] = {
-        messages: 0,
+        messages: data.messages || 0,
         userMessages: 0,
         assistantMessages: 0,
-        tokensIn: 0,
-        tokensOut: 0,
+        tokensIn: data.tokensIn || 0,
+        tokensOut: data.tokensOut || 0,
         totalTokens: data.tokens,
-        cost: 0,
-        sessions: 0,
+        cost: data.cost || 0,
+        sessions: data.sessions || 0,
         models: {},
         tools: {},
         hourly: [],
-        cacheRead: 0,
-        cacheWrite: 0,
+        cacheRead: data.cacheRead || 0,
+        cacheWrite: data.cacheWrite || 0,
         thinkingMessages: 0,
       };
       return acc;

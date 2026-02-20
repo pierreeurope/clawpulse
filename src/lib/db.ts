@@ -185,15 +185,31 @@ export async function getCommunityStats() {
   const dailyAgg = await sql`
     SELECT 
       TO_CHAR(date, 'YYYY-MM-DD') as date,
-      SUM(total_tokens)::BIGINT as tokens
+      SUM(messages)::INTEGER as messages,
+      SUM(tokens_in)::BIGINT as tokens_in,
+      SUM(tokens_out)::BIGINT as tokens_out,
+      SUM(total_tokens)::BIGINT as tokens,
+      SUM(cost)::DECIMAL as cost,
+      SUM(sessions)::INTEGER as sessions,
+      SUM(cache_read)::BIGINT as cache_read,
+      SUM(cache_write)::BIGINT as cache_write
     FROM daily_stats
     GROUP BY date
     ORDER BY date ASC
   `;
 
-  const days: { [date: string]: { tokens: number } } = {};
+  const days: { [date: string]: any } = {};
   for (const row of dailyAgg.rows) {
-    days[formatDate(row.date)] = { tokens: Number(row.tokens) };
+    days[formatDate(row.date)] = {
+      tokens: Number(row.tokens),
+      messages: Number(row.messages),
+      tokensIn: Number(row.tokens_in),
+      tokensOut: Number(row.tokens_out),
+      cost: Number(row.cost),
+      sessions: Number(row.sessions),
+      cacheRead: Number(row.cache_read),
+      cacheWrite: Number(row.cache_write),
+    };
   }
 
   // Aggregate models across all users
