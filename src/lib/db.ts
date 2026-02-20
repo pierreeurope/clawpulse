@@ -116,7 +116,7 @@ export async function getUserStats(userId: number): Promise<ClawPulseStats | nul
   let totalCost = 0;
 
   for (const row of dailyStats.rows as DailyStatsRow[]) {
-    days[row.date] = {
+    days[formatDate(row.date)] = {
       messages: row.messages,
       userMessages: 0, // Not stored separately in DB
       assistantMessages: 0,
@@ -160,6 +160,12 @@ export async function getUserStats(userId: number): Promise<ClawPulseStats | nul
 }
 
 // Get community aggregate stats
+function formatDate(d: any): string {
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  if (typeof d === 'string' && d.length > 10) return new Date(d).toISOString().slice(0, 10);
+  return String(d);
+}
+
 export async function getCommunityStats() {
   const users = await sql`SELECT COUNT(*) as count FROM users`;
   const totalUsers = Number(users.rows[0].count);
@@ -168,13 +174,17 @@ export async function getCommunityStats() {
     SELECT 
       SUM(messages)::INTEGER as total_messages,
       SUM(total_tokens)::BIGINT as total_tokens,
+      SUM(tokens_in)::BIGINT as total_tokens_in,
+      SUM(tokens_out)::BIGINT as total_tokens_out,
+      SUM(cache_read)::BIGINT as total_cache_read,
+      SUM(cache_write)::BIGINT as total_cache_write,
       SUM(cost)::DECIMAL as total_cost
     FROM daily_stats
   `;
 
   const dailyAgg = await sql`
     SELECT 
-      date,
+      TO_CHAR(date, 'YYYY-MM-DD') as date,
       SUM(total_tokens)::BIGINT as tokens
     FROM daily_stats
     GROUP BY date
@@ -183,7 +193,7 @@ export async function getCommunityStats() {
 
   const days: { [date: string]: { tokens: number } } = {};
   for (const row of dailyAgg.rows) {
-    days[row.date] = { tokens: Number(row.tokens) };
+    days[formatDate(row.date)] = { tokens: Number(row.tokens) };
   }
 
   // Aggregate models across all users
@@ -218,6 +228,10 @@ export async function getCommunityStats() {
     totalUsers,
     totalMessages: Number(totals.rows[0]?.total_messages || 0),
     totalTokens: Number(totals.rows[0]?.total_tokens || 0),
+    totalTokensIn: Number(totals.rows[0]?.total_tokens_in || 0),
+    totalTokensOut: Number(totals.rows[0]?.total_tokens_out || 0),
+    totalCacheRead: Number(totals.rows[0]?.total_cache_read || 0),
+    totalCacheWrite: Number(totals.rows[0]?.total_cache_write || 0),
     totalCost: Number(totals.rows[0]?.total_cost || 0),
     days,
     models: modelStats,

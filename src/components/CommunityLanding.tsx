@@ -9,6 +9,10 @@ interface CommunityStats {
   totalUsers: number;
   totalMessages: number;
   totalTokens: number;
+  totalTokensIn: number;
+  totalTokensOut: number;
+  totalCacheRead: number;
+  totalCacheWrite: number;
   totalCost: number;
   days: { [date: string]: { tokens: number } };
   models: { [model: string]: { messages: number; tokens: number; cost: number } };
@@ -81,13 +85,22 @@ export default function CommunityLanding() {
     },
   };
 
+  const totalModelTokens = Object.values(stats?.models || {}).reduce((sum, m) => sum + m.tokens, 0);
   const topModels = Object.entries(stats?.models || {})
+    .filter(([, d]) => d.tokens > 0)
     .sort(([, a], [, b]) => b.tokens - a.tokens)
     .slice(0, 5);
 
   const topTools = Object.entries(stats?.tools || {})
     .sort(([, a], [, b]) => b - a)
     .slice(0, 8);
+
+  const formatNum = (n: number) => {
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return n.toLocaleString();
+  };
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -101,24 +114,30 @@ export default function CommunityLanding() {
         </p>
         
         {/* Big Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-8">
           <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-6">
-            <div className="text-4xl font-bold text-[#58a6ff] mb-2">
+            <div className="text-3xl font-bold text-[#58a6ff] mb-2">
               {stats?.totalUsers.toLocaleString() || 0}
             </div>
-            <div className="text-[#8b949e]">Active Agents</div>
+            <div className="text-[#8b949e] text-sm">Active Agents</div>
           </div>
           <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-6">
-            <div className="text-4xl font-bold text-[#58a6ff] mb-2">
-              {((stats?.totalTokens || 0) / 1_000_000).toFixed(1)}M
+            <div className="text-3xl font-bold text-[#58a6ff] mb-2">
+              {formatNum(stats?.totalTokens || 0)}
             </div>
-            <div className="text-[#8b949e]">Total Tokens</div>
+            <div className="text-[#8b949e] text-sm">Total Tokens</div>
           </div>
           <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-6">
-            <div className="text-4xl font-bold text-[#58a6ff] mb-2">
+            <div className="text-3xl font-bold text-[#58a6ff] mb-2">
               {stats?.totalMessages.toLocaleString() || 0}
             </div>
-            <div className="text-[#8b949e]">Messages</div>
+            <div className="text-[#8b949e] text-sm">Messages</div>
+          </div>
+          <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-6">
+            <div className="text-3xl font-bold text-[#3fb950] mb-2">
+              ${(stats?.totalCost || 0).toFixed(0)}
+            </div>
+            <div className="text-[#8b949e] text-sm">API Spend</div>
           </div>
         </div>
 
@@ -150,25 +169,48 @@ export default function CommunityLanding() {
           </div>
         </section>
 
+        {/* Token Breakdown */}
+        <section className="mb-12">
+          <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Token Breakdown</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Input", value: stats?.totalTokensIn || 0, color: "#58a6ff" },
+                { label: "Output", value: stats?.totalTokensOut || 0, color: "#3fb950" },
+                { label: "Cache Read", value: stats?.totalCacheRead || 0, color: "#d2a8ff" },
+                { label: "Cache Write", value: stats?.totalCacheWrite || 0, color: "#f0883e" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="bg-[#161b22] border border-[#30363d] rounded-lg p-4">
+                  <div className="text-2xl font-bold mb-1" style={{ color }}>{formatNum(value)}</div>
+                  <div className="text-sm text-[#8b949e]">{label}</div>
+                  <div className="text-xs text-[#484f58] mt-1">
+                    {((value / (stats?.totalTokens || 1)) * 100).toFixed(1)}% of total
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Model Distribution */}
         <section className="mb-12">
           <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Top Models</h3>
             <div className="space-y-3">
               {topModels.map(([model, data]) => {
-                const percentage = ((data.tokens / (stats?.totalTokens || 1)) * 100).toFixed(1);
+                const percentage = ((data.tokens / (totalModelTokens || 1)) * 100).toFixed(1);
                 return (
                   <div key={model}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-white font-medium">{model}</span>
                       <span className="text-[#8b949e]">
-                        {data.tokens.toLocaleString()} tokens ({percentage}%)
+                        {formatNum(data.tokens)} tokens ({percentage}%)
                       </span>
                     </div>
                     <div className="w-full bg-[#21262d] rounded-full h-2">
                       <div
-                        className="bg-[#58a6ff] h-2 rounded-full"
-                        style={{ width: `${percentage}%` }}
+                        className="bg-[#58a6ff] h-2 rounded-full transition-all"
+                        style={{ width: `${Math.max(Number(percentage), 1)}%` }}
                       />
                     </div>
                   </div>
