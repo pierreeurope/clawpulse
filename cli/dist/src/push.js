@@ -1,26 +1,26 @@
 import { collect } from "./collect.js";
 import { loadConfig, isAuthenticated } from "./config.js";
 export async function push(options) {
-    console.log("🚀 ClawPulse Push\n");
+    const silent = options?.silent || false;
+    if (!silent)
+        console.log("🚀 ClawPulse Push\n");
     if (!isAuthenticated()) {
-        console.error("❌ Not authenticated!");
-        console.log("\nPlease sign in first:");
-        console.log("1. Visit https://clawpulse.vercel.app");
-        console.log("2. Sign in with GitHub");
-        console.log("3. Use the web interface to view your stats");
-        console.log("\n💡 For now, stats must be submitted via the web interface.");
-        console.log("   Full CLI push coming soon!");
+        if (silent)
+            return;
+        console.error("❌ Not authenticated! Run: clawpulse setup");
         return;
     }
     // Collect stats
-    const stats = await collect({ ...options, output: null });
+    const stats = await collect({ ...options, output: null, silent });
     if (!stats) {
-        console.error("❌ Failed to collect stats");
+        if (!silent)
+            console.error("❌ Failed to collect stats");
         return;
     }
     const config = loadConfig();
     try {
-        console.log(`\n📤 Pushing to ${config.apiUrl}...`);
+        if (!silent)
+            console.log(`📤 Pushing to ${config.apiUrl}...`);
         const response = await fetch(`${config.apiUrl}/api/stats/submit`, {
             method: "POST",
             headers: {
@@ -31,14 +31,16 @@ export async function push(options) {
         });
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || "Failed to push stats");
+            throw new Error(error.error || `HTTP ${response.status}`);
         }
         const result = await response.json();
-        console.log(`✅ ${result.message}`);
-        console.log(`\n🌐 View your dashboard: ${config.apiUrl}/dashboard`);
+        if (!silent) {
+            console.log(`✅ ${result.message}`);
+            console.log(`\n🌐 Dashboard: ${config.apiUrl}/dashboard`);
+        }
     }
     catch (error) {
-        console.error(`❌ Failed to push: ${error.message}`);
-        console.log("\n💡 Try using the web interface at https://clawpulse.vercel.app");
+        if (!silent)
+            console.error(`❌ Failed to push: ${error.message}`);
     }
 }
