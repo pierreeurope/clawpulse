@@ -137,7 +137,8 @@ export default function CommunityLanding() {
             <div className="text-3xl font-bold text-[#3fb950] mb-2">
               ${(stats?.totalCost || 0).toFixed(0)}
             </div>
-            <div className="text-[#8b949e] text-sm">API Spend</div>
+            <div className="text-[#8b949e] text-sm">Token Value</div>
+            <div className="text-[#484f58] text-xs mt-1">Est. cost at API rates</div>
           </div>
         </div>
 

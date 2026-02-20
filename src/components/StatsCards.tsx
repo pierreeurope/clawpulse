@@ -43,9 +43,9 @@ export default function StatsCards({ stats }: Props) {
         color: "from-green-500/20 to-emerald-500/10",
       },
       {
-        label: "Total Cost",
+        label: "Token Value",
         value: formatCost(stats.totals.cost),
-        detail: "API spend",
+        detail: "Est. at API rates",
         icon: "💰",
         color: "from-yellow-500/20 to-amber-500/10",
       },
