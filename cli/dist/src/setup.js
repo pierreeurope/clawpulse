@@ -37,12 +37,12 @@ function installUnixCron(bin) {
             console.log("✅ Auto-push cron already installed");
             return true;
         }
-        // Add two daily pushes: 8am and 10pm (in user's local time)
-        const cronLine1 = `0 8 * * * ${bin} push --silent ${CRON_TAG}`;
-        const cronLine2 = `0 22 * * * ${bin} push --silent ${CRON_TAG}`;
+        // Add two daily pushes: 12am and 12pm (in user's local time)
+        const cronLine1 = `0 0 * * * ${bin} push --silent ${CRON_TAG}`;
+        const cronLine2 = `0 12 * * * ${bin} push --silent ${CRON_TAG}`;
         const newCrontab = existing.trimEnd() + "\n" + cronLine1 + "\n" + cronLine2 + "\n";
         execSync("crontab -", { input: newCrontab, encoding: "utf-8" });
-        console.log("✅ Auto-push cron installed (8:00 AM + 10:00 PM daily)");
+        console.log("✅ Auto-push cron installed (12:00 AM + 12:00 PM daily)");
         return true;
     }
     catch (error) {
@@ -107,7 +107,7 @@ export async function setup() {
     updatedConfig.setupDate = new Date().toISOString();
     saveConfig(updatedConfig);
     console.log("\n" + "─".repeat(40));
-    console.log("\n🎉 All done! Your stats will auto-push at 8am and 10pm daily.");
+    console.log("\n🎉 All done! Your stats will auto-push at 12am and 12pm daily.");
     console.log("   Dashboard: https://clawpulse.vercel.app/dashboard");
     console.log("   Community: https://clawpulse.vercel.app");
     console.log("\n   To stop auto-push: clawpulse uninstall");

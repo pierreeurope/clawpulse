@@ -217,31 +217,57 @@ function computeStreaks(sortedDates: string[]): { streak: number; longestStreak:
 }
 
 function detectAgentName(): string {
+  // Try OpenClaw config.yaml
   try {
     const configPath = path.join(os.homedir(), ".openclaw", "config.yaml");
     if (fs.existsSync(configPath)) {
       const content = fs.readFileSync(configPath, "utf-8");
       const match = content.match(/agentName:\s*["']?([^"'\n]+)["']?/);
-      if (match) return match[1];
+      if (match) return match[1].trim();
     }
   } catch {}
+
+  // Try IDENTITY.md
+  try {
+    const identityPath = path.join(os.homedir(), ".openclaw", "workspace", "IDENTITY.md");
+    if (fs.existsSync(identityPath)) {
+      const content = fs.readFileSync(identityPath, "utf-8");
+      const match = content.match(/\*\*Name:\*\*\s*(.+)/);
+      if (match) return match[1].trim();
+    }
+  } catch {}
+
+  // Try SOUL.md
+  try {
+    const soulPath = path.join(os.homedir(), ".openclaw", "workspace", "SOUL.md");
+    if (fs.existsSync(soulPath)) {
+      const content = fs.readFileSync(soulPath, "utf-8");
+      const match = content.match(/I'm\s+(\w+)/);
+      if (match) return match[1].trim();
+    }
+  } catch {}
+
   return "Agent";
 }
 
 export async function collect(options: any): Promise<ClawPulseStats | null> {
+  const silent = options?.silent || false;
+  const log = (...args: any[]) => { if (!silent) console.log(...args); };
+  const logErr = (...args: any[]) => { if (!silent) console.error(...args); };
+
   const sessionsDir =
     options.sessionsDir ||
     path.join(os.homedir(), ".openclaw", "agents", "main", "sessions");
 
   const agentName = options.name || detectAgentName();
 
-  console.log(`📊 ClawPulse Collector`);
-  console.log(`📂 Scanning: ${sessionsDir}`);
+  log(`📊 ClawPulse Collector`);
+  log(`📂 Scanning: ${sessionsDir}`);
 
   if (!fs.existsSync(sessionsDir)) {
-    console.error("❌ Sessions directory not found!");
-    console.error(`   Expected: ${sessionsDir}`);
-    console.error(`   Use --sessions-dir to specify a different location`);
+    logErr("❌ Sessions directory not found!");
+    logErr(`   Expected: ${sessionsDir}`);
+    logErr(`   Use --sessions-dir to specify a different location`);
     return null;
   }
 
@@ -250,10 +276,10 @@ export async function collect(options: any): Promise<ClawPulseStats | null> {
     .filter((f) => f.endsWith(".jsonl") && !f.includes(".deleted"))
     .map((f) => path.join(sessionsDir, f));
 
-  console.log(`📁 Found ${files.length} session files`);
+  log(`📁 Found ${files.length} session files`);
 
   if (files.length === 0) {
-    console.log("⚠️  No session files found");
+    log("⚠️  No session files found");
     return null;
   }
 
@@ -266,12 +292,12 @@ export async function collect(options: any): Promise<ClawPulseStats | null> {
       await processFile(file, days, sessionDates);
       processed++;
       if (processed % 20 === 0) {
-        console.log(`   Processed ${processed}/${files.length} files...`);
+        log(`   Processed ${processed}/${files.length} files...`);
       }
     } catch {}
   }
 
-  console.log(`✅ Processed ${processed} files`);
+  log(`✅ Processed ${processed} files`);
 
   const sortedDates = Object.keys(days).sort();
   let totalMessages = 0;
@@ -306,16 +332,16 @@ export async function collect(options: any): Promise<ClawPulseStats | null> {
 
   if (options.output) {
     fs.writeFileSync(options.output, JSON.stringify(stats, null, 2));
-    console.log(`\n💾 Saved to: ${options.output}`);
+    log(`\n💾 Saved to: ${options.output}`);
   }
 
-  console.log(`\n📊 Stats Summary:`);
-  console.log(`   Agent: ${agentName}`);
-  console.log(`   Days: ${sortedDates.length}`);
-  console.log(`   Messages: ${totalMessages.toLocaleString()}`);
-  console.log(`   Tokens: ${totalTokens.toLocaleString()}`);
-  console.log(`   Cost: $${totalCost.toFixed(2)}`);
-  console.log(`   Streak: ${streak} days (longest: ${longestStreak})`);
+  log(`\n📊 Stats Summary:`);
+  log(`   Agent: ${agentName}`);
+  log(`   Days: ${sortedDates.length}`);
+  log(`   Messages: ${totalMessages.toLocaleString()}`);
+  log(`   Tokens: ${totalTokens.toLocaleString()}`);
+  log(`   Cost: $${totalCost.toFixed(2)}`);
+  log(`   Streak: ${streak} days (longest: ${longestStreak})`);
 
   return stats;
 }
