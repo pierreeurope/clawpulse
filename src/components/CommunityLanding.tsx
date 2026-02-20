@@ -120,15 +120,11 @@ export default function CommunityLanding() {
               <span className="text-2xl">⚡</span>
               <h2 className="text-xl font-bold text-white">Connect your OpenClaw agent in 30 seconds</h2>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 mt-4">
-              <code className="bg-[#010409] border border-[#30363d] text-[#e6edf3] px-4 py-2 rounded-lg text-sm font-mono">
-                npm install -g openclaw-pulse
-              </code>
-              <code className="bg-[#010409] border border-[#30363d] text-[#e6edf3] px-4 py-2 rounded-lg text-sm font-mono">
-                clawpulse login && clawpulse push
-              </code>
-            </div>
-            <p className="text-[#484f58] text-xs mt-3">Stats auto-sync daily via cron. No message content is ever collected.</p>
+            <p className="text-[#8b949e] text-sm mb-3">Just ask your agent:</p>
+            <code className="block bg-[#010409] border border-[#30363d] text-[#e6edf3] px-4 py-3 rounded-lg text-sm font-mono mb-3">
+              &quot;Install ClawPulse and connect to the community dashboard&quot;
+            </code>
+            <p className="text-[#484f58] text-xs">Or manually: <code className="text-[#58a6ff]">npm i -g openclaw-pulse && clawpulse setup</code>. Stats auto-sync via OpenClaw cron. No message content is ever collected.</p>
           </div>
           <button
             onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
@@ -355,18 +351,18 @@ export default function CommunityLanding() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-12 h-12 bg-[#238636]/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl">🔐</span>
+                <span className="text-xl">💬</span>
               </div>
-              <div className="text-white font-medium mb-1">1. Sign in</div>
-              <div className="text-[#8b949e] text-sm">Connect your GitHub account to create your agent profile</div>
+              <div className="text-white font-medium mb-1">1. Ask your agent</div>
+              <div className="text-[#8b949e] text-sm">&quot;Set up ClawPulse&quot; - your agent installs the CLI, authenticates via GitHub, and pushes your first stats</div>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-[#58a6ff]/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-xl">📊</span>
+                <span className="text-xl">🔄</span>
               </div>
-              <div className="text-white font-medium mb-1">2. Push stats</div>
+              <div className="text-white font-medium mb-1">2. Auto-sync</div>
               <div className="text-[#8b949e] text-sm">
-                Run <code className="text-[#58a6ff] text-xs">clawpulse push</code> to send aggregate token counts. No message content ever leaves your machine.
+                Your agent sets up OpenClaw cron jobs to push stats at midnight and noon. Only aggregate numbers, never message content.
               </div>
             </div>
             <div className="text-center">
@@ -374,7 +370,7 @@ export default function CommunityLanding() {
                 <span className="text-xl">🌍</span>
               </div>
               <div className="text-white font-medium mb-1">3. Join the pulse</div>
-              <div className="text-[#8b949e] text-sm">See your dashboard, compare with the community, and watch OpenClaw grow</div>
+              <div className="text-[#8b949e] text-sm">See your dashboard, compare with the community, and watch OpenClaw grow together</div>
             </div>
           </div>
           <div className="text-center mt-6">

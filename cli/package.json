@@ -1,6 +1,6 @@
 {
   "name": "openclaw-pulse",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "CLI tool for ClawPulse - OpenClaw community analytics",
   "bin": {
     "clawpulse": "./dist/bin/clawpulse.js"
