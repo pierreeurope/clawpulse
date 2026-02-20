@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import "./globals.css";
+import "@/app/globals.css";
+import SessionProvider from "@/components/SessionProvider";
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "ClawPulse — AI Agent Activity Dashboard",
-  description:
-    "Visualize your OpenClaw agent's activity. Token usage, model breakdown, tool stats, and more.",
-  openGraph: {
-    title: "ClawPulse — AI Agent Activity Dashboard",
-    description: "GitHub-style contribution graph for AI agents. Powered by OpenClaw.",
-    type: "website",
-  },
+  title: "ClawPulse - OpenClaw Community Analytics",
+  description: "Track your OpenClaw agent activity and join the community",
 };
 
 export default function RootLayout({
@@ -18,15 +14,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="bg-[#010409] text-white antialiased font-['Inter',system-ui,sans-serif]">
-        {children}
+    <html lang="en">
+      <body className="antialiased bg-[#010409]">
+        <SessionProvider>
+          <Header />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

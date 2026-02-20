@@ -1,98 +1,155 @@
-# ⚡ ClawPulse
+# ClawPulse ⚡
 
-**GitHub-style activity dashboard for OpenClaw AI agents.**
+**Community-powered analytics for OpenClaw agents**
 
-See how your agent spends its time. Track tokens, costs, models, tools, and activity patterns with a beautiful dark-mode dashboard.
+ClawPulse transforms your OpenClaw session logs into beautiful, shareable dashboards and connects you with the OpenClaw community.
 
-![ClawPulse Dashboard](https://raw.githubusercontent.com/pierreeurope/clawpulse/main/docs/screenshot.png)
+## Features
 
-## What You Get
+### 🏠 Personal Dashboard
+- **Activity heatmap** - GitHub-style contribution graph of your token usage
+- **Token flow chart** - Daily input/output visualization
+- **Model usage** - See which AI models you use most
+- **Tool analytics** - Track your most-used tools
+- **Activity clock** - Discover your peak productivity hours
+- **Streak tracking** - Build consistency with daily streaks
 
-- **Contribution Heatmap** - GitHub-style green squares showing daily token usage
-- **Token Flow Chart** - Input vs output tokens over time with cache overlay
-- **Model Breakdown** - Which models your agent uses (Opus, Sonnet, etc.)
-- **Tool Usage Ranking** - Most-used tools (exec, web_search, browser...)
-- **Activity Clock** - 24-hour radial chart showing when your agent is active
-- **Stats Cards** - Total tokens, cost, messages, streaks, and more
+### 🌍 Community Features
+- **Leaderboard** - See how you rank among other OpenClaw users
+- **Community pulse** - Aggregate stats across all agents
+- **Model distribution** - What the community is using
+- **Tool trends** - Most popular tools
 
-## Privacy First
-
-ClawPulse only collects **aggregate numbers** (token counts, costs, tool names). No message content, no file paths, no personal data ever leaves your machine.
+### 🔒 Privacy First
+We collect **only aggregate statistics**:
+- ✅ Message counts, tokens, costs
+- ✅ Model names, tool names
+- ✅ Timestamps (for activity graphs)
+- ❌ **NO** message content
+- ❌ **NO** file paths
+- ❌ **NO** tool arguments
 
 ## Quick Start
 
-### 1. Install
+### 1. Sign In
+Visit [clawpulse.vercel.app](https://clawpulse.vercel.app) and sign in with GitHub.
+
+### 2. Install CLI
+```bash
+npm install -g clawpulse
+```
+
+### 3. Push Your Stats
+```bash
+clawpulse push
+```
+
+That's it! Your dashboard will update automatically.
+
+## CLI Commands
 
 ```bash
-# Clone the repo
-git clone https://github.com/pierreeurope/clawpulse.git
-cd clawpulse
+# Collect stats from your OpenClaw sessions
+clawpulse collect
 
+# Login with GitHub (coming soon - use web for now)
+clawpulse login
+
+# Push stats to ClawPulse
+clawpulse push
+
+# Show your stats summary
+clawpulse status
+```
+
+See [cli/README.md](cli/README.md) for detailed CLI documentation.
+
+## Development
+
+### Requirements
+- Node.js 18+
+- pnpm
+- Vercel account (for deployment)
+- GitHub OAuth app
+
+### Setup
+
+```bash
 # Install dependencies
 pnpm install
-```
 
-### 2. Collect Your Stats
+# Copy environment variables
+cp .env.example .env.local
 
-```bash
-# Parse your OpenClaw session files into stats.json
-pnpm collect
+# Add your values:
+# - POSTGRES_URL (Vercel Postgres)
+# - GITHUB_ID and GITHUB_SECRET (GitHub OAuth)
+# - NEXTAUTH_SECRET (generate with: openssl rand -base64 32)
+# - NEXTAUTH_URL (http://localhost:3000 for dev)
 
-# Or specify a custom sessions directory
-SESSIONS_DIR=~/.openclaw/agents/main/sessions pnpm collect
-```
-
-### 3. View Dashboard
-
-```bash
+# Run dev server
 pnpm dev
-# Open http://localhost:3000
 ```
 
-### 4. Deploy (Optional)
+### Project Structure
 
-```bash
-# Deploy to Vercel
-pnpm build
-npx vercel --prod
 ```
-
-## As an OpenClaw Skill
-
-Install via ClawHub so your agent can auto-generate its own dashboard:
-
-```bash
-clawhub install clawpulse
+clawpulse/
+├── cli/                    # npm CLI tool
+│   ├── bin/               # Executable entry point
+│   ├── src/               # CLI source code
+│   └── package.json       # npm package config
+├── src/
+│   ├── app/               # Next.js app directory
+│   │   ├── api/           # API routes
+│   │   ├── dashboard/     # Personal dashboard page
+│   │   ├── community/     # Leaderboard page
+│   │   └── page.tsx       # Landing/home page
+│   ├── components/        # React components (KEEP ALL!)
+│   ├── lib/               # Utilities
+│   │   ├── auth.ts        # NextAuth config
+│   │   ├── db.ts          # Database queries
+│   │   └── format.ts      # Formatting helpers
+│   └── types/
+│       └── stats.ts       # TypeScript types
+├── sql/
+│   └── schema.sql         # Database schema
+└── scripts/
+    └── collect.ts         # Original collector (reference)
 ```
-
-The skill adds a daily cron job to collect stats and can serve the dashboard via canvas.
-
-## How It Works
-
-OpenClaw stores every conversation in JSONL session files at `~/.openclaw/agents/{agent}/sessions/*.jsonl`. Each assistant message includes token counts, model info, and cost data.
-
-ClawPulse's collector script parses these files and aggregates them by day into a single `stats.json` - no content is extracted, only numbers.
 
 ## Tech Stack
 
-- Next.js 15 + TypeScript
-- Recharts for charts
-- Tailwind CSS for styling
-- Deployed on Vercel
+- **Frontend**: Next.js 15, React 19, Tailwind CSS
+- **Charts**: Recharts
+- **Auth**: NextAuth.js v5 (Auth.js)
+- **Database**: Vercel Postgres (PostgreSQL)
+- **Deployment**: Vercel
+- **CLI**: Commander.js, TypeScript
 
-## Roadmap
+## Deployment
 
-- [ ] Community profiles and leaderboards
-- [ ] Agent comparison mode
-- [ ] Shareable profile cards (PNG export)
-- [ ] Weekly email digest
-- [ ] "Agent Wrapped" annual summary
-- [ ] Inter-agent communication stats
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full deployment instructions.
+
+## Design
+
+ClawPulse uses GitHub's dark theme palette:
+- Background: `#010409`
+- Cards: `#0d1117`
+- Borders: `#30363d`
+- Links: `#58a6ff`
+- Success: `#39d353`
+
+All existing components maintain this aesthetic. The design is documented in [DESIGN.md](DESIGN.md).
 
 ## Contributing
 
-PRs welcome! This is an open source project by the OpenClaw community.
+ClawPulse is built for the OpenClaw community. Contributions welcome!
 
 ## License
 
 MIT
+
+---
+
+Built with ⚡ by the OpenClaw community
