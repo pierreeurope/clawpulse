@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import ContributionHeatmap from "./ContributionHeatmap";
+import RightNowSection from "./RightNowSection";
+import TrendsSection from "./TrendsSection";
+import EnhancedToolInsights from "./EnhancedToolInsights";
+import MilestonesSection from "./MilestonesSection";
 import { ClawPulseStats } from "@/types/stats";
 
 interface CommunityStats {
@@ -17,6 +21,31 @@ interface CommunityStats {
   days: { [date: string]: { tokens: number; messages: number; tokensIn: number; tokensOut: number; cost: number; sessions: number; cacheRead: number; cacheWrite: number } };
   models: { [model: string]: { messages: number; tokens: number; cost: number } };
   tools: { [tool: string]: number };
+  activeAgents: number;
+  lastSync: {
+    agentName: string;
+    tokenCount: number;
+    timestamp: string;
+  } | null;
+  tokenBurnRate: number;
+  tokenGrowth: number;
+  messageGrowth: number;
+  toolGrowth: { [tool: string]: number };
+  thisWeekTokens: number;
+  lastWeekTokens: number;
+  thisWeekMessages: number;
+  lastWeekMessages: number;
+  recordHolders: {
+    busiestDay: {
+      agentName: string;
+      date: string;
+      tokens: number;
+    } | null;
+    mostDiverse: {
+      agentName: string;
+      toolCount: number;
+    } | null;
+  };
 }
 
 export default function CommunityLanding() {
@@ -172,6 +201,31 @@ export default function CommunityLanding() {
         </div>
       </section>
 
+      {/* ── Right Now ── */}
+      <RightNowSection
+        activeAgents={stats?.activeAgents || 0}
+        lastSync={stats?.lastSync || null}
+        tokenBurnRate={stats?.tokenBurnRate || 0}
+      />
+
+      {/* ── Trends ── */}
+      <TrendsSection
+        tokenGrowth={stats?.tokenGrowth || 0}
+        messageGrowth={stats?.messageGrowth || 0}
+        thisWeekTokens={stats?.thisWeekTokens || 0}
+        lastWeekTokens={stats?.lastWeekTokens || 0}
+        thisWeekMessages={stats?.thisWeekMessages || 0}
+        lastWeekMessages={stats?.lastWeekMessages || 0}
+        days={stats?.days || {}}
+        models={stats?.models || {}}
+      />
+
+      {/* ── Milestones ── */}
+      <MilestonesSection
+        totalTokens={stats?.totalTokens || 0}
+        recordHolders={stats?.recordHolders || { busiestDay: null, mostDiverse: null }}
+      />
+
       {/* ── Activity Heatmap ── */}
       <section className="mb-10">
         <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
@@ -274,75 +328,11 @@ export default function CommunityLanding() {
         </div>
       </section>
 
-      {/* ── Two Column: Models + Tools ── */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-        {/* Models */}
-        <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
-          <h3 className="text-lg font-semibold text-white mb-1">Model Distribution</h3>
-          <p className="text-sm text-[#8b949e] mb-4">What the community runs on</p>
-
-          {/* Mini donut visual */}
-          <div className="flex items-center gap-6 mb-4">
-            <div className="relative w-24 h-24 flex-shrink-0">
-              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                {(() => {
-                  let offset = 0;
-                  return topModels.map(([model, data], i) => {
-                    const pct = (data.tokens / (totalModelTokens || 1)) * 100;
-                    const dash = `${pct} ${100 - pct}`;
-                    const el = (
-                      <circle key={model} cx="18" cy="18" r="14" fill="none"
-                        stroke={modelColors[i]} strokeWidth="4"
-                        strokeDasharray={dash} strokeDashoffset={-offset}
-                        className="transition-all" />
-                    );
-                    offset += pct;
-                    return el;
-                  });
-                })()}
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
-                {topModels.length}
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              {topModels.map(([model, data], i) => {
-                const pct = ((data.tokens / (totalModelTokens || 1)) * 100).toFixed(1);
-                return (
-                  <div key={model} className="flex items-center gap-2 text-sm">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: modelColors[i] }} />
-                    <span className="text-white flex-1 truncate">{model.replace("claude-", "")}</span>
-                    <span className="text-[#8b949e] font-mono text-xs">{pct}%</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Tools */}
-        <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
-          <h3 className="text-lg font-semibold text-white mb-1">Tool Usage</h3>
-          <p className="text-sm text-[#8b949e] mb-4">Most popular tools across all agents</p>
-          <div className="space-y-2">
-            {topTools.map(([tool, count]) => {
-              const pct = (count / maxToolCount) * 100;
-              return (
-                <div key={tool} className="flex items-center gap-3">
-                  <span className="text-sm text-[#e6edf3] w-28 truncate font-mono" title={tool}>{tool}</span>
-                  <div className="flex-1 bg-[#21262d] rounded-full h-2">
-                    <div
-                      className="bg-[#58a6ff] h-2 rounded-full transition-all"
-                      style={{ width: `${Math.max(pct, 2)}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-[#8b949e] w-12 text-right font-mono">{formatNum(count)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+      {/* ── Enhanced Tool Insights ── */}
+      <EnhancedToolInsights
+        tools={stats?.tools || {}}
+        toolGrowth={stats?.toolGrowth || {}}
+      />
 
       {/* ── How It Works ── */}
       <section className="mb-10">

@@ -75,7 +75,8 @@ export default function CommunityPage() {
                   {leaderboard.map((entry, index) => (
                     <tr 
                       key={entry.id} 
-                      className="border-b border-[#21262d] hover:bg-[#161b22] transition-colors"
+                      className="border-b border-[#21262d] hover:bg-[#161b22] transition-colors cursor-pointer"
+                      onClick={() => window.location.href = `/agent/${entry.username}`}
                     >
                       <td className="px-6 py-4">
                         <span className={`font-bold ${
@@ -97,7 +98,7 @@ export default function CommunityPage() {
                             />
                           )}
                           <div>
-                            <div className="text-white font-medium">{entry.username}</div>
+                            <div className="text-white font-medium hover:text-[#58a6ff]">{entry.username}</div>
                             <div className="text-sm text-[#8b949e]">{entry.agentName}</div>
                           </div>
                         </div>

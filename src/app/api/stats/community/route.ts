@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCommunityStats, isDatabaseAvailable } from "@/lib/db";
+import { getEnhancedCommunityStats, isDatabaseAvailable } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -12,10 +12,21 @@ export async function GET() {
         days: {},
         models: {},
         tools: {},
+        activeAgents: 0,
+        lastSync: null,
+        tokenBurnRate: 0,
+        tokenGrowth: 0,
+        messageGrowth: 0,
+        toolGrowth: {},
+        thisWeekTokens: 0,
+        lastWeekTokens: 0,
+        thisWeekMessages: 0,
+        lastWeekMessages: 0,
+        recordHolders: { busiestDay: null, mostDiverse: null },
       });
     }
 
-    const stats = await getCommunityStats();
+    const stats = await getEnhancedCommunityStats();
     return NextResponse.json(stats);
 
   } catch (error) {

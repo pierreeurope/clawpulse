@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ClawPulseStats } from "@/types/stats";
 import TopBanner from "./TopBanner";
 import StatsCards from "./StatsCards";
@@ -9,12 +9,35 @@ import TokenFlowChart from "./TokenFlowChart";
 import ModelUsageChart from "./ModelUsageChart";
 import ToolUsageChart from "./ToolUsageChart";
 import ActivityClock from "./ActivityClock";
+import PersonalInsights from "./PersonalInsights";
 
 interface Props {
   stats: ClawPulseStats;
 }
 
 export default function Dashboard({ stats }: Props) {
+  const [communitySummary, setCommunitySummary] = useState<{
+    avgCacheHitRate: number;
+    avgThinkingPct: number;
+    topModel: string;
+    bestStreak: number;
+  } | null>(null);
+
+  useEffect(() => {
+    async function loadCommunitySummary() {
+      try {
+        const res = await fetch("/api/stats/community/summary");
+        if (res.ok) {
+          const data = await res.json();
+          setCommunitySummary(data);
+        }
+      } catch (error) {
+        console.error("Failed to load community summary:", error);
+      }
+    }
+    loadCommunitySummary();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#010409]">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -25,6 +48,11 @@ export default function Dashboard({ stats }: Props) {
         <section className="mb-8">
           <StatsCards stats={stats} />
         </section>
+
+        {/* Personal Insights */}
+        {communitySummary && (
+          <PersonalInsights stats={stats} communitySummary={communitySummary} />
+        )}
 
         {/* Contribution Heatmap */}
         <section className="mb-8">

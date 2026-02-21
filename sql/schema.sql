@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   github_avatar TEXT,
   agent_name TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  last_pushed_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id);
