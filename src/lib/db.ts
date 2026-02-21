@@ -641,13 +641,15 @@ export async function getEnhancedCommunityStats() {
   
   // Most diverse tool usage
   const mostDiverseUser = await sql`
-    SELECT u.github_username, u.agent_name,
-      COUNT(DISTINCT jsonb_object_keys(ds.tools)) as tool_count
-    FROM daily_stats ds
-    JOIN users u ON u.id = ds.user_id
-    WHERE ds.tools IS NOT NULL AND ds.tools != '{}'::jsonb
-    GROUP BY u.id, u.github_username, u.agent_name
-    ORDER BY tool_count DESC
+    SELECT u.github_username, u.agent_name, sub.tool_count
+    FROM (
+      SELECT ds.user_id, COUNT(DISTINCT k) as tool_count
+      FROM daily_stats ds, jsonb_object_keys(ds.tools) AS k
+      WHERE ds.tools IS NOT NULL AND ds.tools != '{}'::jsonb
+      GROUP BY ds.user_id
+    ) sub
+    JOIN users u ON u.id = sub.user_id
+    ORDER BY sub.tool_count DESC
     LIMIT 1
   `;
   
