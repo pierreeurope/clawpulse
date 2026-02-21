@@ -42,3 +42,4 @@ next-env.d.ts
 public/stats.json
 public/stats.json
 .env.local
+.env*.local
