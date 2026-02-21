@@ -250,6 +250,7 @@ export default function CommunityLanding() {
       {/* ── Milestones ── */}
       <MilestonesSection
         totalTokens={stats?.totalTokens || 0}
+        days={stats?.days || {}}
         recordHolders={stats?.recordHolders || { busiestDay: null, mostDiverse: null }}
       />
 
