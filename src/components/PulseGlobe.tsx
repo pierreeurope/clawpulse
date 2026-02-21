@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import createGlobe from "cobe";
 
 interface Agent {
@@ -18,13 +18,39 @@ interface PulseGlobeProps {
 
 export default function PulseGlobe({ agents }: PulseGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [hoveredAgent, setHoveredAgent] = useState<Agent | null>(null);
+  const pointerInteracting = useRef<number | null>(null);
+  const pointerInteractionMovement = useRef(0);
+  const phiRef = useRef(0);
+
+  // Focus on Europe initially (where our first agents are)
+  const focusRef = useRef<number>(0.3);
+
+  const markers = agents.map((agent) => {
+    const lastPushed = new Date(agent.lastPushedAt).getTime();
+    const ageHours = (Date.now() - lastPushed) / (1000 * 60 * 60);
+
+    let size: number;
+    if (ageHours < 1) {
+      size = 0.1;
+    } else if (ageHours < 24) {
+      size = 0.07;
+    } else if (ageHours < 168) {
+      size = 0.05;
+    } else {
+      size = 0.03;
+    }
+
+    return {
+      location: [agent.lat, agent.lng] as [number, number],
+      size,
+    };
+  });
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    let phi = 0;
     let width = 0;
+
     const onResize = () => {
       if (canvasRef.current) {
         width = canvasRef.current.offsetWidth;
@@ -33,63 +59,25 @@ export default function PulseGlobe({ agents }: PulseGlobeProps) {
     window.addEventListener("resize", onResize);
     onResize();
 
-    // Calculate marker size and color based on recency
-    const now = Date.now();
-    const markers = agents.map((agent) => {
-      const lastPushed = new Date(agent.lastPushedAt).getTime();
-      const ageMs = now - lastPushed;
-      const ageHours = ageMs / (1000 * 60 * 60);
-
-      // Bright pulse for agents active in the last hour
-      // Subtle glow for agents active in the last 24 hours
-      // Dim for older activity
-      let size = 0.03;
-      let color: [number, number, number] = [0.345, 0.651, 1]; // #58a6ff blue
-
-      if (ageHours < 1) {
-        // Recently active - bright and large with pulse
-        size = 0.08 + Math.sin(Date.now() / 200) * 0.02;
-        color = [0.4, 0.8, 1]; // Brighter blue
-      } else if (ageHours < 24) {
-        // Active today - medium glow
-        size = 0.05;
-        color = [0.345, 0.651, 1];
-      } else if (ageHours < 24 * 7) {
-        // Active this week - subtle
-        size = 0.04;
-        color = [0.25, 0.5, 0.8];
-      } else {
-        // Older - dim
-        size = 0.03;
-        color = [0.15, 0.3, 0.5];
-      }
-
-      return {
-        location: [agent.lat, agent.lng] as [number, number],
-        size,
-      };
-    });
-
     const globe = createGlobe(canvasRef.current, {
       devicePixelRatio: 2,
       width: width * 2,
       height: width * 2,
-      phi: 0,
-      theta: 0.2,
+      phi: focusRef.current,
+      theta: 0.15,
       dark: 1,
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 6,
-      baseColor: [0.05, 0.05, 0.12], // Very dark blue background
-      markerColor: [0.345, 0.651, 1], // GitHub blue #58a6ff
-      glowColor: [0.05, 0.05, 0.15], // Dark glow
+      diffuse: 3,
+      mapSamples: 36000,
+      mapBrightness: 2,
+      baseColor: [0.12, 0.14, 0.2],
+      markerColor: [0.345, 0.651, 1],
+      glowColor: [0.06, 0.08, 0.18],
       markers,
       onRender: (state) => {
-        // Slow auto-rotation
-        state.phi = phi;
-        phi += 0.003;
-
-        // Update size based on width
+        if (pointerInteracting.current === null) {
+          phiRef.current += 0.002;
+        }
+        state.phi = phiRef.current + pointerInteractionMovement.current;
         state.width = width * 2;
         state.height = width * 2;
       },
@@ -102,17 +90,45 @@ export default function PulseGlobe({ agents }: PulseGlobeProps) {
   }, [agents]);
 
   return (
-    <div className="relative">
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: "100%",
-          maxWidth: 600,
-          aspectRatio: "1",
-          margin: "0 auto",
-          display: "block",
-        }}
-      />
+    <div className="relative flex justify-center">
+      <div
+        style={{ width: "100%", maxWidth: 550, aspectRatio: "1" }}
+        className="relative"
+      >
+        <canvas
+          ref={canvasRef}
+          onPointerDown={(e) => {
+            pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
+            canvasRef.current!.style.cursor = "grabbing";
+          }}
+          onPointerUp={() => {
+            pointerInteracting.current = null;
+            canvasRef.current!.style.cursor = "grab";
+          }}
+          onPointerOut={() => {
+            pointerInteracting.current = null;
+            canvasRef.current!.style.cursor = "grab";
+          }}
+          onMouseMove={(e) => {
+            if (pointerInteracting.current !== null) {
+              const delta = e.clientX - pointerInteracting.current;
+              pointerInteractionMovement.current = delta / 100;
+            }
+          }}
+          onTouchMove={(e) => {
+            if (pointerInteracting.current !== null && e.touches[0]) {
+              const delta = e.touches[0].clientX - pointerInteracting.current;
+              pointerInteractionMovement.current = delta / 100;
+            }
+          }}
+          style={{
+            width: "100%",
+            height: "100%",
+            cursor: "grab",
+            contain: "layout paint size",
+          }}
+        />
+      </div>
     </div>
   );
 }
