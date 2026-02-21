@@ -24,13 +24,20 @@ export async function GET() {
 
     const agents = result.rows.map((row) => {
       const [lat, lng] = getTimezoneCoords(row.timezone);
+      const lastPushedAt =
+        row.last_pushed_at instanceof Date
+          ? row.last_pushed_at.toISOString()
+          : typeof row.last_pushed_at === "string"
+            ? row.last_pushed_at
+            : new Date(0).toISOString();
+
       return {
         username: row.github_username,
         agentName: row.agent_name || row.github_username,
         timezone: row.timezone,
         lat,
         lng,
-        lastPushedAt: row.last_pushed_at || new Date(0).toISOString(),
+        lastPushedAt,
         totalTokens: Number(row.total_tokens),
       };
     });
