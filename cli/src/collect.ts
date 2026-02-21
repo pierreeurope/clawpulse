@@ -31,6 +31,7 @@ interface ClawPulseStats {
   version: 1;
   agentName: string;
   generatedAt: string;
+  timezone?: string;
   days: { [date: string]: DayStats };
   totals: {
     messages: number;
@@ -317,6 +318,7 @@ export async function collect(options: any): Promise<ClawPulseStats | null> {
     version: 1,
     agentName,
     generatedAt: new Date().toISOString(),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     days,
     totals: {
       messages: totalMessages,

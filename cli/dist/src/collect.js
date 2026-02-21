@@ -241,6 +241,7 @@ export async function collect(options) {
         version: 1,
         agentName,
         generatedAt: new Date().toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         days,
         totals: {
             messages: totalMessages,

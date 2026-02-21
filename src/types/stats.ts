@@ -26,6 +26,7 @@ export interface ClawPulseStats {
   version: 1;
   agentName: string;
   generatedAt: string;
+  timezone?: string;
   days: { [date: string]: DayStats };
   totals: {
     messages: number;

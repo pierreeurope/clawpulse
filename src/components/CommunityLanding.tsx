@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
+import dynamic from "next/dynamic";
 import ContributionHeatmap from "./ContributionHeatmap";
 import RightNowSection from "./RightNowSection";
 import TrendsSection from "./TrendsSection";
 import EnhancedToolInsights from "./EnhancedToolInsights";
 import MilestonesSection from "./MilestonesSection";
 import { ClawPulseStats } from "@/types/stats";
+
+const PulseGlobe = dynamic(() => import("./PulseGlobe"), { ssr: false });
 
 interface CommunityStats {
   totalUsers: number;
@@ -48,8 +51,18 @@ interface CommunityStats {
   };
 }
 
+interface GlobeAgent {
+  username: string;
+  agentName: string;
+  lat: number;
+  lng: number;
+  lastPushedAt: string;
+  totalTokens: number;
+}
+
 export default function CommunityLanding() {
   const [stats, setStats] = useState<CommunityStats | null>(null);
+  const [globeAgents, setGlobeAgents] = useState<GlobeAgent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -66,7 +79,21 @@ export default function CommunityLanding() {
         setLoading(false);
       }
     }
+    
+    async function loadGlobeData() {
+      try {
+        const res = await fetch("/api/stats/globe");
+        if (res.ok) {
+          const data = await res.json();
+          setGlobeAgents(data.agents || []);
+        }
+      } catch (error) {
+        console.error("Failed to load globe data:", error);
+      }
+    }
+    
     loadCommunityStats();
+    loadGlobeData();
   }, []);
 
   if (loading) {
@@ -197,6 +224,45 @@ export default function CommunityLanding() {
           <div className="bg-[#0d1117] border border-[#30363d] rounded-lg p-5 text-center">
             <div className="text-3xl font-bold text-[#d2a8ff]">{totalDays}</div>
             <div className="text-[#8b949e] text-xs mt-1">Active Days</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── The Global Pulse ── */}
+      <section className="mb-10">
+        <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-8">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-semibold text-white mb-2">Agents Around the World</h3>
+            <p className="text-sm text-[#8b949e]">
+              Each dot represents an OpenClaw agent. Brighter dots = recently active.
+            </p>
+          </div>
+          
+          {globeAgents.length > 0 ? (
+            <div className="flex justify-center">
+              <PulseGlobe agents={globeAgents} />
+            </div>
+          ) : (
+            <div className="text-center py-12 text-[#8b949e]">
+              <span className="text-4xl mb-2 block">🌍</span>
+              <p>Waiting for agents to share their location...</p>
+              <p className="text-xs text-[#484f58] mt-2">Push stats to see your agent on the globe!</p>
+            </div>
+          )}
+          
+          <div className="mt-6 flex flex-wrap gap-3 justify-center text-xs">
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#161b22] rounded-lg border border-[#30363d]">
+              <div className="w-2 h-2 rounded-full bg-[#58a6ff] animate-pulse" />
+              <span className="text-[#8b949e]">Active in last hour</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#161b22] rounded-lg border border-[#30363d]">
+              <div className="w-2 h-2 rounded-full bg-[#3fb950]" />
+              <span className="text-[#8b949e]">Active today</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#161b22] rounded-lg border border-[#30363d]">
+              <div className="w-2 h-2 rounded-full bg-[#484f58]" />
+              <span className="text-[#8b949e]">Active this week</span>
+            </div>
           </div>
         </div>
       </section>

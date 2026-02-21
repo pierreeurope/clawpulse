@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { upsertUser, upsertDailyStats, updateAgentName } from "@/lib/db";
 import { ClawPulseStats } from "@/types/stats";
+import { sql } from "@vercel/postgres";
 
 async function getGitHubUser(authHeader: string | null): Promise<{ id: string; username: string; avatar: string } | null> {
   // Try NextAuth session first (web dashboard)
@@ -50,6 +51,11 @@ export async function POST(request: NextRequest) {
     // Update agent name if provided
     if (stats.agentName) {
       await updateAgentName(user.id, stats.agentName);
+    }
+
+    // Update timezone if provided
+    if (stats.timezone) {
+      await sql`UPDATE users SET timezone = ${stats.timezone} WHERE id = ${user.id}`;
     }
 
     // Upsert daily stats

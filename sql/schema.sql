@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   github_username TEXT NOT NULL,
   github_avatar TEXT,
   agent_name TEXT,
+  timezone TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   last_pushed_at TIMESTAMPTZ
